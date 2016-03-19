@@ -1,5 +1,7 @@
 package com.academy.android.jsengine;
 
+import com.eclipsesource.v8.V8;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.os.Build;
@@ -7,12 +9,9 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.webkit.ValueCallback;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity implements ValueCallback<String> {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -23,10 +22,12 @@ public class MainActivity extends AppCompatActivity implements ValueCallback<Str
             + "        return this.recursive(n - 1) + this.recursive(n - 2);\n"
             + "    }\n"
             + "};"
-            + "recursive(43)";
-    private WebView mWebView;
+            + "recursive(35)";
+
 
     private long mStartTime;
+
+    private V8 mRuntime;
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @SuppressLint("SetJavaScriptEnabled")
@@ -34,11 +35,7 @@ public class MainActivity extends AppCompatActivity implements ValueCallback<Str
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mWebView = (WebView) findViewById(R.id.webview);
-        WebSettings webSettings = mWebView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        mWebView.evaluateJavascript(javaScriptCode,this);
-
+        mRuntime = V8.createV8Runtime();
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -50,16 +47,11 @@ public class MainActivity extends AppCompatActivity implements ValueCallback<Str
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private void evaluateJavaScript() {
         mStartTime = System.currentTimeMillis();
-        mWebView.evaluateJavascript(javaScriptCode,this);
+        int value = mRuntime.executeIntegerScript(javaScriptCode);
+        Log.d(TAG, "onReceiveValue: " + value);
+        long executionTime = System.currentTimeMillis() - mStartTime;
+        ((TextView) findViewById(R.id.tv_result))
+                .setText("Time took: " + String.valueOf(executionTime) + " ms");
     }
 
-    @Override
-    public void onReceiveValue(String value) {
-        Log.d(TAG, "onReceiveValue: "+value);
-        if(mStartTime>0) {
-            ((TextView) findViewById(R.id.tv_result))
-                    .setText(
-                            "Time took: " + String.valueOf(System.currentTimeMillis() - mStartTime)+" ms");
-        }
-    }
 }
