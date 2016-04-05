@@ -11,32 +11,69 @@
         android:orientation="vertical"
         tools:context="com.academy.android.jsengine.MainActivity">
 
+
+    <Button
+            android:id="@+id/btn_start"
+            android:text="Start"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
     <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-        <Button
-                android:id="@+id/btn_start"
-                android:text="Start"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"/>
+        <ImageView
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:src="@drawable/java"/>
+
+        <TextView
+                android:textSize="20sp"
+                android:id="@+id/tv_native_result"
+                android:layout_width="match_parent"
+                android:gravity="center|start"
+                android:layout_height="match_parent"
+                tools:text="3000ms"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+        <ImageView
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:src="@drawable/web_view"/>
 
         <TextView
                 android:textSize="20sp"
                 android:id="@+id/tv_result"
-                android:layout_width="0dp"
-                android:gravity="center"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:gravity="center|start"
+                android:layout_height="match_parent"
                 tools:text="3000ms"/>
     </LinearLayout>
 
-    <WebView
-            android:id="@+id/webview"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            />
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+        <ImageView
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:src="@drawable/v8"/>
+
+        <TextView
+                android:textSize="20sp"
+                android:id="@+id/tv_v8_result"
+                android:layout_width="match_parent"
+                android:gravity="center|start"
+                android:layout_height="match_parent"
+                tools:text="3000ms"/>
+    </LinearLayout>
 
 </LinearLayout>

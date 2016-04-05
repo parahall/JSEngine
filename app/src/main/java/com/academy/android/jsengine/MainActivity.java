@@ -1,5 +1,7 @@
 package com.academy.android.jsengine;
 
+import com.eclipsesource.v8.V8;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.os.Build;
@@ -12,9 +14,29 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.TextView;
 
+import java.util.Arrays;
+
 public class MainActivity extends AppCompatActivity implements ValueCallback<String> {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+
+    private static int SEQUENCE_NUMBER = 28;
+
+    private WebView mWebView;
+
+    private long mStartTime;
+
+    private V8 mRuntime;
+
+    private int mTimesToExecute;
+
+    private int currentExecution;
+
+    private long[] mWebViewTimes;
+
+    private long[] mNativeTimes;
+
+    private long[] mV8Times;
 
     final String javaScriptCode = "var recursive = function(n) {\n"
             + "    if(n <= 2) {\n"
@@ -23,10 +45,7 @@ public class MainActivity extends AppCompatActivity implements ValueCallback<Str
             + "        return this.recursive(n - 1) + this.recursive(n - 2);\n"
             + "    }\n"
             + "};"
-            + "recursive(43)";
-    private WebView mWebView;
-
-    private long mStartTime;
+            + "recursive(" + SEQUENCE_NUMBER + ")";
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @SuppressLint("SetJavaScriptEnabled")
@@ -34,14 +53,20 @@ public class MainActivity extends AppCompatActivity implements ValueCallback<Str
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mWebView = (WebView) findViewById(R.id.webview);
+        mWebView = new WebView(this);
         WebSettings webSettings = mWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
-        mWebView.evaluateJavascript(javaScriptCode,this);
+        mWebView.evaluateJavascript(javaScriptCode, this);
+        mRuntime = V8.createV8Runtime();
+        mTimesToExecute = 1000;
+        mWebViewTimes = new long[mTimesToExecute];
+        mNativeTimes = new long[mTimesToExecute];
+        mV8Times = new long[mTimesToExecute];
 
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                currentExecution = 0;
                 evaluateJavaScript();
             }
         });
@@ -50,16 +75,46 @@ public class MainActivity extends AppCompatActivity implements ValueCallback<Str
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private void evaluateJavaScript() {
         mStartTime = System.currentTimeMillis();
-        mWebView.evaluateJavascript(javaScriptCode,this);
+        mWebView.evaluateJavascript(javaScriptCode, this);
     }
 
     @Override
     public void onReceiveValue(String value) {
-        Log.d(TAG, "onReceiveValue: "+value);
-        if(mStartTime>0) {
+        Log.d(TAG, "onReceiveValue: " + value);
+        long executionTime = System.currentTimeMillis() - mStartTime;
+        mWebViewTimes[currentExecution] = executionTime;
+        if (mStartTime > 0) {
             ((TextView) findViewById(R.id.tv_result))
-                    .setText(
-                            "Time took: " + String.valueOf(System.currentTimeMillis() - mStartTime)+" ms");
+                    .setText("Time took: " + String.valueOf(executionTime) + " ms");
+        }
+
+        Fibonacchi fibonacchi = new Fibonacchi();
+        mStartTime = System.currentTimeMillis();
+        value = "" + fibonacchi.calculate(SEQUENCE_NUMBER);
+        Log.d(TAG, "V8 onReceiveValue: " + value);
+        executionTime = System.currentTimeMillis() - mStartTime;
+        mNativeTimes[currentExecution] = executionTime;
+
+        ((TextView) findViewById(R.id.tv_native_result))
+                .setText("Native Time took: " + String.valueOf(executionTime) + " ms");
+
+        mStartTime = System.currentTimeMillis();
+        value = "" + mRuntime.executeIntegerScript(javaScriptCode);
+        Log.d(TAG, "V8 onReceiveValue: " + value);
+        executionTime = System.currentTimeMillis() - mStartTime;
+        ((TextView) findViewById(R.id.tv_v8_result))
+                .setText("Time took: " + String.valueOf(executionTime) + " ms");
+        mV8Times[currentExecution] = executionTime;
+        currentExecution++;
+        if (currentExecution < mTimesToExecute) {
+            Log.d(TAG, "Current: " + currentExecution);
+            evaluateJavaScript();
+        } else {
+            Log.d(TAG, "Finished");
+            Log.d(TAG, "Webview: " + Arrays.toString(mWebViewTimes));
+            Log.d(TAG, "Native: " + Arrays.toString(mNativeTimes));
+            Log.d(TAG, "v8: " + Arrays.toString(mV8Times));
         }
     }
+
 }
